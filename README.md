@@ -22,7 +22,7 @@ This repository contains the **Orbit-3D Pipeline**, aA prototype developed for t
 * **API Framework:** FastAPI (Asynchronous Python), `python-multipart`
 * **3D Processing:** Headless Blender 4.0 (via `bpy` and `subprocess`)
 * **Environment:** Docker (Debian Linux base with required C++ GL libraries)
-* **AI Routing:** Groq (meta-llama/llama-4-scout-17b-16e-instruct / Llama-3.3-70b-versatile) & Tripo3D
+* **AI Routing:** Groq (meta-llama/llama-4-scout-17b-16e-instruct / Llama-3.3-70b-versatile) & Tripo3D (v3.1-20260211)
 * **Hosting:** Render.com (Web Service via Docker)
 
 ## **⚙️ Setup Instructions**
