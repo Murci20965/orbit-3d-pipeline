@@ -1,0 +1,16 @@
+# Ignore Python Virtual Env
+backend/venv/
+__pycache__/
+
+# Ignore Node Modules
+frontend/node_modules/
+frontend/.next/
+
+# Ignore Temp Files & 3D Models
+backend/temp/
+*.glb
+*.gltf
+
+# Ignore Secret Keys!
+.env
+.env.local
