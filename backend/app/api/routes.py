@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.post("/generate")
 async def generate_3d_asset(
-    request: Request,
+    request: Request, 
     prompt: Optional[str] = Form(None),
     image_url: Optional[str] = Form(None),
     file: Optional[UploadFile] = File(None)
@@ -21,7 +21,6 @@ async def generate_3d_asset(
     try:
         print(f"[*] API: Received multimodal generation request.")
         
-        # 1. Handle the physical file upload securely
         file_token = None
         if file and file.filename:
             print(f"[*] API: Processing uploaded file: {file.filename}")
@@ -31,38 +30,40 @@ async def generate_3d_asset(
         if not prompt and not image_url and not file_token:
             raise Exception("You must provide a text prompt or upload an image.")
 
-        # 2. Process concurrently
         context_subject = prompt if prompt else "an uploaded image object"
-        # Pass the file_bytes directly to Groq if the user uploaded a file
-        groq_task = generate_educational_context(
-            prompt=prompt, 
-            file_bytes=file_bytes if file else None, 
-            mime_type=file.content_type if file else "image/jpeg"
-        )
+        groq_task = generate_educational_context(context_subject, file_bytes if file else None, file.content_type if file else "image/jpeg")
         tripo_task = generate_raw_mesh(prompt, image_url, file_token)
         
         educational_context, raw_mesh_url = await asyncio.gather(groq_task, tripo_task)
         
-        # 3. Downloader
         job_id = str(uuid.uuid4())
         raw_filepath = await download_model(raw_mesh_url, f"{job_id}_raw.glb")
 
-        # 4. Blender Optimization
-        optimized_filepath = os.path.join("temp", f"{job_id}_optimized.glb")
-        abs_raw, abs_opt = os.path.abspath(raw_filepath), os.path.abspath(optimized_filepath)
-
-        print(f"[*] API: Initiating Headless Blender Optimization...")
-        result = subprocess.run(["blender", "-b", "-P", "blender/optimize.py", "--", abs_raw, abs_opt],
-            capture_output=True, text=True
-        )
-
-        if result.returncode != 0 or not os.path.exists(abs_opt):
-            print(f"--- BLENDER WARNING: Optimization skipped due to Cloud RAM limits. Using raw mesh. ---")
-            final_web_url = raw_mesh_url # Fallback directly to Tripo's URL
+        # ==========================================
+        # The Cloud OOMKill Bypass
+        # ==========================================
+        skip_blender = os.getenv("SKIP_BLENDER", "False").lower() == "true"
+        
+        if skip_blender:
+            print("[*] API: Cloud Free Tier detected. Skipping Blender to prevent OOM crash.")
+            final_web_url = raw_mesh_url # Serve the URL directly from Tripo's CDN
             final_local_file = raw_filepath
         else:
-            final_web_url = f"{request.base_url}temp/{job_id}_optimized.glb"
-            final_local_file = optimized_filepath
+            print(f"[*] API: Initiating Headless Blender Optimization...")
+            optimized_filepath = os.path.join("temp", f"{job_id}_optimized.glb")
+            abs_raw, abs_opt = os.path.abspath(raw_filepath), os.path.abspath(optimized_filepath)
+
+            result = subprocess.run(["blender", "-b", "-P", "blender/optimize.py", "--", abs_raw, abs_opt],
+                capture_output=True, text=True
+            )
+
+            if result.returncode != 0 or not os.path.exists(abs_opt):
+                print(f"--- BLENDER WARNING: Optimization failed. Using raw mesh. ---")
+                final_web_url = raw_mesh_url 
+                final_local_file = raw_filepath
+            else:
+                final_web_url = f"{request.base_url}temp/{job_id}_optimized.glb"
+                final_local_file = optimized_filepath
 
         return {
             "status": "success",
