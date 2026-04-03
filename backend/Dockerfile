@@ -23,5 +23,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 6. Copy all the code (main.py, tripo.py, optimize.py) into the container
 COPY . .
 
-# 7. Expose port 8000 for the FastAPI server
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# 7. Expose port 7860 for the FastAPI server
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]

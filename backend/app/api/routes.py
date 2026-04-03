@@ -39,39 +39,25 @@ async def generate_3d_asset(
         job_id = str(uuid.uuid4())
         raw_filepath = await download_model(raw_mesh_url, f"{job_id}_raw.glb")
 
-        # ==========================================
-        # The Cloud OOMKill Bypass
-        # ==========================================
-        skip_blender = os.getenv("SKIP_BLENDER", "False").lower() == "true"
-        
-        if skip_blender:
-            print("[*] API: Cloud Free Tier detected. Skipping Blender to prevent OOM crash.")
-            final_web_url = raw_mesh_url # Serve the URL directly from Tripo's CDN
-            final_local_file = raw_filepath
-        else:
-            print(f"[*] API: Initiating Headless Blender Optimization...")
-            optimized_filepath = os.path.join("temp", f"{job_id}_optimized.glb")
-            abs_raw, abs_opt = os.path.abspath(raw_filepath), os.path.abspath(optimized_filepath)
+        print(f"[*] API: Initiating Headless Blender Optimization...")
+        optimized_filepath = os.path.join("temp", f"{job_id}_optimized.glb")
+        abs_raw, abs_opt = os.path.abspath(raw_filepath), os.path.abspath(optimized_filepath)
 
-            result = subprocess.run(["blender", "-b", "-P", "blender/optimize.py", "--", abs_raw, abs_opt],
-                capture_output=True, text=True
-            )
+        result = subprocess.run(["blender", "-b", "-P", "blender/optimize.py", "--", abs_raw, abs_opt],
+            capture_output=True, text=True
+        )
 
-            if result.returncode != 0 or not os.path.exists(abs_opt):
-                print(f"--- BLENDER WARNING: Optimization failed. Using raw mesh. ---")
-                final_web_url = raw_mesh_url 
-                final_local_file = raw_filepath
-            else:
-                final_web_url = f"{request.base_url}temp/{job_id}_optimized.glb"
-                final_local_file = optimized_filepath
+        if result.returncode != 0 or not os.path.exists(abs_opt):
+            print(f"--- BLENDER ERROR ---\n{result.stderr}")
+            raise Exception("Mesh optimization process failed.")
 
         return {
             "status": "success",
-            "message": "3D asset generated successfully.",
+            "message": "3D asset generated and optimized successfully.",
             "educational_context": educational_context,
             "original_mesh_url": raw_mesh_url,
-            "optimized_local_file": final_local_file,
-            "optimized_web_url": final_web_url
+            "optimized_local_file": optimized_filepath,
+            "optimized_web_url": f"{request.base_url}temp/{job_id}_optimized.glb"
         }
     except Exception as e:
         print(f"\n[!!!] PIPELINE CRASHED: {str(e)}\n")

@@ -9,15 +9,14 @@ app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=["*"], 
+    allow_credentials=False, 
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 os.makedirs("temp", exist_ok=True)
 app.mount("/temp", StaticFiles(directory="temp"), name="temp")
-
 app.include_router(router)
 
 @app.get("/")

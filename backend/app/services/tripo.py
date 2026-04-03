@@ -6,7 +6,6 @@ TRIPO_URL = "https://api.tripo3d.ai/v2/openapi/task"
 UPLOAD_URL = "https://api.tripo3d.ai/v2/openapi/upload"
 
 async def upload_image_to_tripo(file_bytes: bytes, filename: str, content_type: str) -> str:
-    """Uploads the raw image to Tripo3D's secure servers and gets a file token."""
     print(f"[*] Tripo Service: Uploading physical file '{filename}' to Tripo3D...")
     headers = {"Authorization": f"Bearer {settings.TRIPO_API_KEY}"}
     files = {"file": (filename, file_bytes, content_type)}
@@ -19,7 +18,6 @@ async def upload_image_to_tripo(file_bytes: bytes, filename: str, content_type: 
         return data["data"]["image_token"]
 
 async def generate_raw_mesh(prompt: str = None, image_url: str = None, file_token: str = None) -> str:
-    """Generates a 3D model from text, an image URL, or an uploaded file token."""
     headers = {
         "Authorization": f"Bearer {settings.TRIPO_API_KEY}",
         "Content-Type": "application/json"
@@ -27,25 +25,13 @@ async def generate_raw_mesh(prompt: str = None, image_url: str = None, file_toke
     
     if file_token:
         print("[*] Tripo Service: Initializing Image-to-3D with secure file_token...")
-        payload = {
-            "type": "image_to_model",
-            "model_version": "v2.5-20250123",
-            "file": {"type": "jpg", "file_token": file_token}
-        }
+        payload = {"type": "image_to_model", "model_version": "v3.1-20260211", "file": {"type": "jpg", "file_token": file_token}}
     elif image_url:
         print("[*] Tripo Service: Initializing Image-to-3D with URL...")
-        payload = {
-            "type": "image_to_model",
-            "model_version": "v2.5-20250123",
-            "file": {"type": "jpg", "url": image_url}
-        }
+        payload = {"type": "image_to_model", "model_version": "v3.1-20260211", "file": {"type": "jpg", "url": image_url}}
     else:
         print(f"[*] Tripo Service: Initializing Text-to-3D for prompt: '{prompt}'...")
-        payload = {
-            "type": "text_to_model",
-            "model_version": "v2.5-20250123",
-            "prompt": prompt
-        }
+        payload = {"type": "text_to_model", "model_version": "v3.1-20260211", "prompt": prompt}
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(TRIPO_URL, headers=headers, json=payload)
@@ -58,7 +44,7 @@ async def generate_raw_mesh(prompt: str = None, image_url: str = None, file_toke
         print(f"[*] Tripo Task ID: {task_id}. Awaiting completion...", flush=True)
 
         attempts = 0
-        while attempts < 20:
+        while attempts < 100:
             await asyncio.sleep(3)
             attempts += 1
             
@@ -66,7 +52,7 @@ async def generate_raw_mesh(prompt: str = None, image_url: str = None, file_toke
             poll_data = poll_response.json()
             status = poll_data['data']['status']
             
-            print(f"[*] Tripo Polling[{attempts}/20] - Status: {status}", flush=True)
+            print(f"[*] Tripo Polling[{attempts}/100] - Status: {status}", flush=True)
             
             if status == "success":
                 output_data = poll_data['data'].get('output', {})
@@ -74,5 +60,4 @@ async def generate_raw_mesh(prompt: str = None, image_url: str = None, file_toke
             elif status in ["failed", "cancelled", "unknown"]:
                 raise Exception(f"Tripo generation failed. Status: {status}")
                 
-        print("\n[!] WARNING: Tripo3D API is taking too long. Bypassing to prevent Render timeout...")
-        return "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Avocado/glTF-Binary/Avocado.glb"
+        raise Exception("Tripo3D API Timeout: Generation took too long.")
