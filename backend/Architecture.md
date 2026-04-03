@@ -11,7 +11,8 @@ Orbit-3D is a highly modular, decoupled Monorepo consisting of:
 
 ## **2\. Architecture and AI Logic**
 
- graph TD
+```mermaid
+graph TD
     %% Define Styles
     classDef frontend fill:#09090b,stroke:#3b82f6,stroke-width:2px,color:#fff
     classDef backend fill:#09090b,stroke:#10b981,stroke-width:2px,color:#fff
@@ -45,7 +46,7 @@ Orbit-3D is a highly modular, decoupled Monorepo consisting of:
     
     API -- "Returns JSON + Web URL" --> UI
     UI -- "Renders 3D Canvas" --> User
-
+```
 ## The pipeline follows a strict, asynchronous data flow:
 
 1. **The Ingestion Layer:** The user submits a text prompt or uploads a physical .jpg/.png via multipart/form-data in the Next.js UI.  
