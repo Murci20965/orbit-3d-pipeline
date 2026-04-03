@@ -11,40 +11,40 @@ Orbit-3D is a highly modular, decoupled Monorepo consisting of:
 
 ## **2\. Architecture and AI Logic**
 
-graph TD  
-    %% Define Styles  
-    classDef frontend fill:\#09090b,stroke:\#3b82f6,stroke-width:2px,color:\#fff  
-    classDef backend fill:\#09090b,stroke:\#10b981,stroke-width:2px,color:\#fff  
-    classDef external fill:\#09090b,stroke:\#f59e0b,stroke-width:2px,color:\#fff  
-    classDef storage fill:\#09090b,stroke:\#8b5cf6,stroke-width:2px,color:\#fff
+ graph TD
+    %% Define Styles
+    classDef frontend fill:#09090b,stroke:#3b82f6,stroke-width:2px,color:#fff
+    classDef backend fill:#09090b,stroke:#10b981,stroke-width:2px,color:#fff
+    classDef external fill:#09090b,stroke:#f59e0b,stroke-width:2px,color:#fff
+    classDef storage fill:#09090b,stroke:#8b5cf6,stroke-width:2px,color:#fff
 
-    %% Nodes  
-    User((User))  
-    UI\["Orbit-UI\<br/\>(Next.js 15 / R3F)"\]:::frontend  
-    API\["Orbit-Engine\<br/\>(FastAPI)"\]:::backend  
-    Groq\["Groq API\<br/\>(Llama-4-Scout / Llama-3.3)"\]:::external  
-    Tripo\["Tripo3D API\<br/\>(v3.1)"\]:::external  
-    Blender\["Headless Blender 4.0\<br/\>(Docker Subprocess)"\]:::backend  
-    TempStore\[("Temp Volume\<br/\>(/temp)")\]:::storage
+    %% Nodes
+    User((User))
+    UI["Orbit-UI<br/>(Next.js 15 / R3F)"]:::frontend
+    API["Orbit-Engine<br/>(FastAPI)"]:::backend
+    Groq["Groq API<br/>(Llama-4-Scout / Llama-3.3)"]:::external
+    Tripo["Tripo3D API<br/>(v3.1)"]:::external
+    Blender["Headless Blender 4.0<br/>(Docker Subprocess)"]:::backend
+    TempStore[("Temp Volume<br/>(/temp)")]:::storage
 
-    %% Flow  
-    User \-- "Text Prompt or Image Upload" \--\> UI  
-    UI \-- "Multipart Form Data" \--\> API  
-      
-    API \-- "Concurrent Task 1:\<br/\>Vision/Text Prompt" \--\> Groq  
-    API \-- "Concurrent Task 2:\<br/\>Image/Text to 3D" \--\> Tripo  
-      
-    Groq \-. "Educational Context" .-\> API  
-    Tripo \-. "Raw Mesh URL" .-\> API  
-      
-    API \-- "Downloads Raw .glb" \--\> TempStore  
-    API \-- "Triggers bpy Script" \--\> Blender  
-      
-    Blender \-- "Reads Raw Mesh" \--\> TempStore  
-    Blender \-- "Centers, Scales, \<br/\>Draco Compresses" \--\> TempStore  
-      
-    API \-- "Returns JSON \+ Web URL" \--\> UI  
-    UI \-- "Renders 3D Canvas" \--\> User
+    %% Flow
+    User -- "Text Prompt or Image Upload" --> UI
+    UI -- "Multipart Form Data" --> API
+    
+    API -- "Concurrent Task 1:<br/>Vision/Text Prompt" --> Groq
+    API -- "Concurrent Task 2:<br/>Image/Text to 3D" --> Tripo
+    
+    Groq -. "Educational Context" .-> API
+    Tripo -. "Raw Mesh URL" .-> API
+    
+    API -- "Downloads Raw .glb" --> TempStore
+    API -- "Triggers bpy Script" --> Blender
+    
+    Blender -- "Reads Raw Mesh" --> TempStore
+    Blender -- "Centers, Scales, <br/>Draco Compresses" --> TempStore
+    
+    API -- "Returns JSON + Web URL" --> UI
+    UI -- "Renders 3D Canvas" --> User
 
 ## The pipeline follows a strict, asynchronous data flow:
 
