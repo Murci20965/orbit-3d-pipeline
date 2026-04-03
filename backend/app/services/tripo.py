@@ -29,21 +29,21 @@ async def generate_raw_mesh(prompt: str = None, image_url: str = None, file_toke
         print("[*] Tripo Service: Initializing Image-to-3D with secure file_token...")
         payload = {
             "type": "image_to_model",
-            "model_version": "v3.1-20260211",
+            "model_version": "v2.5-20250123",
             "file": {"type": "jpg", "file_token": file_token}
         }
     elif image_url:
         print("[*] Tripo Service: Initializing Image-to-3D with URL...")
         payload = {
             "type": "image_to_model",
-            "model_version": "v3.1-20260211",
+            "model_version": "v2.5-20250123",
             "file": {"type": "jpg", "url": image_url}
         }
     else:
         print(f"[*] Tripo Service: Initializing Text-to-3D for prompt: '{prompt}'...")
         payload = {
             "type": "text_to_model",
-            "model_version": "v3.1-20260211",
+            "model_version": "v2.5-20250123",
             "prompt": prompt
         }
 

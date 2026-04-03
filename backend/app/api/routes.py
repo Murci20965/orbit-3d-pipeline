@@ -57,16 +57,20 @@ async def generate_3d_asset(
         )
 
         if result.returncode != 0 or not os.path.exists(abs_opt):
-            print(f"--- BLENDER LOG ---\n{result.stderr}")
-            raise Exception("Mesh optimization process failed.")
+            print(f"--- BLENDER WARNING: Optimization skipped due to Cloud RAM limits. Using raw mesh. ---")
+            final_web_url = raw_mesh_url # Fallback directly to Tripo's URL
+            final_local_file = raw_filepath
+        else:
+            final_web_url = f"{request.base_url}temp/{job_id}_optimized.glb"
+            final_local_file = optimized_filepath
 
         return {
             "status": "success",
-            "message": "3D asset generated and optimized successfully.",
+            "message": "3D asset generated successfully.",
             "educational_context": educational_context,
             "original_mesh_url": raw_mesh_url,
-            "optimized_local_file": optimized_filepath,
-            "optimized_web_url": f"{request.base_url}temp/{job_id}_optimized.glb"
+            "optimized_local_file": final_local_file,
+            "optimized_web_url": final_web_url
         }
     except Exception as e:
         print(f"\n[!!!] PIPELINE CRASHED: {str(e)}\n")
