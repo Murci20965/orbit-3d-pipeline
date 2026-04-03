@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Form, UploadFile, File
+from fastapi import APIRouter, HTTPException, Form, UploadFile, File, Request
 from typing import Optional
 import os
 import uuid
@@ -13,6 +13,7 @@ router = APIRouter()
 
 @router.post("/generate")
 async def generate_3d_asset(
+    request: Request,
     prompt: Optional[str] = Form(None),
     image_url: Optional[str] = Form(None),
     file: Optional[UploadFile] = File(None)
@@ -65,7 +66,7 @@ async def generate_3d_asset(
             "educational_context": educational_context,
             "original_mesh_url": raw_mesh_url,
             "optimized_local_file": optimized_filepath,
-            "optimized_web_url": f"http://localhost:8000/temp/{job_id}_optimized.glb"
+            "optimized_web_url": f"{request.base_url}temp/{job_id}_optimized.glb"
         }
     except Exception as e:
         print(f"\n[!!!] PIPELINE CRASHED: {str(e)}\n")
