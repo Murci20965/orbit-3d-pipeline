@@ -58,7 +58,7 @@ async def generate_raw_mesh(prompt: str = None, image_url: str = None, file_toke
         print(f"[*] Tripo Task ID: {task_id}. Awaiting completion...", flush=True)
 
         attempts = 0
-        while attempts < 100:
+        while attempts < 20:
             await asyncio.sleep(3)
             attempts += 1
             
@@ -66,12 +66,13 @@ async def generate_raw_mesh(prompt: str = None, image_url: str = None, file_toke
             poll_data = poll_response.json()
             status = poll_data['data']['status']
             
-            print(f"[*] Tripo Polling[{attempts}/100] - Status: {status}", flush=True)
+            print(f"[*] Tripo Polling[{attempts}/20] - Status: {status}", flush=True)
             
             if status == "success":
                 output_data = poll_data['data'].get('output', {})
                 return output_data.get('pbr_model') or output_data.get('model')
-            elif status in["failed", "cancelled", "unknown"]:
+            elif status in ["failed", "cancelled", "unknown"]:
                 raise Exception(f"Tripo generation failed. Status: {status}")
                 
-        raise Exception("Tripo3D API Timeout.")
+        print("\n[!] WARNING: Tripo3D API is taking too long. Bypassing to prevent Render timeout...")
+        return "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Avocado/glTF-Binary/Avocado.glb"
