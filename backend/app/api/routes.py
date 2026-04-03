@@ -51,14 +51,18 @@ async def generate_3d_asset(
             print(f"--- BLENDER ERROR ---\n{result.stderr}")
             raise Exception("Mesh optimization process failed.")
 
+        # Force HTTPS for Vercel Security
+        secure_base_url = str(request.base_url).replace("http://", "https://")
+
         return {
             "status": "success",
             "message": "3D asset generated and optimized successfully.",
             "educational_context": educational_context,
             "original_mesh_url": raw_mesh_url,
             "optimized_local_file": optimized_filepath,
-            "optimized_web_url": f"{request.base_url}temp/{job_id}_optimized.glb"
+            "optimized_web_url": f"{secure_base_url}temp/{job_id}_optimized.glb"
         }
+        
     except Exception as e:
         print(f"\n[!!!] PIPELINE CRASHED: {str(e)}\n")
         raise HTTPException(status_code=500, detail=str(e))

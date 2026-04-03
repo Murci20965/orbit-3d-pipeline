@@ -47,17 +47,23 @@ async def generate_raw_mesh(prompt: str = None, image_url: str = None, file_toke
         while attempts < 100:
             await asyncio.sleep(3)
             attempts += 1
-            
-            poll_response = await client.get(f"{TRIPO_URL}/{task_id}", headers=headers)
-            poll_data = poll_response.json()
-            status = poll_data['data']['status']
-            
-            print(f"[*] Tripo Polling[{attempts}/100] - Status: {status}", flush=True)
-            
-            if status == "success":
-                output_data = poll_data['data'].get('output', {})
-                return output_data.get('pbr_model') or output_data.get('model')
-            elif status in ["failed", "cancelled", "unknown"]:
-                raise Exception(f"Tripo generation failed. Status: {status}")
+            try:
+                poll_response = await client.get(f"{TRIPO_URL}/{task_id}", headers=headers)
+                if poll_response.status_code != 200:
+                    print(f"[*] Tripo Polling Hiccup (HTTP {poll_response.status_code}). Retrying...", flush=True)
+                    continue
+                    
+                poll_data = poll_response.json()
+                status = poll_data['data']['status']
+                print(f"[*] Tripo Polling[{attempts}/100] - Status: {status}", flush=True)
+                
+                if status == "success":
+                    output_data = poll_data['data'].get('output', {})
+                    return output_data.get('pbr_model') or output_data.get('model')
+                elif status in ["failed", "cancelled", "unknown"]:
+                    raise Exception(f"Tripo generation failed. Status: {status}")
+            except Exception as e:
+                print(f"[*] Tripo Network Hiccup: {str(e)}. Ignoring and retrying...", flush=True)
+                continue
                 
         raise Exception("Tripo3D API Timeout: Generation took too long.")
