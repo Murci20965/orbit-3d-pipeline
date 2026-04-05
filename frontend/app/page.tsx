@@ -23,7 +23,13 @@ export default function OrbitDashboard() {
     "A vintage brass telescope",
     "A low polygon gold crown",
     "A futuristic space helmet",
-    "A worn leather armchair"
+    "A worn leather armchair",
+    "A sleek sport motorcycle",
+    "An ancient stone statue of a lion",
+    "A cute cartoon-style cat",
+    "A detailed human heart model",
+    "A sci-fi energy sword",
+    "A rustic wooden cabin",
   ];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
