@@ -113,9 +113,9 @@ export default function OrbitDashboard() {
         </div>
 
         {/* Llama-3/4 INSIGHTS */}
-        <div className="mb-8 flex-1">
+        <div className="mb-8">
           <h2 className="text-[10px] font-bold text-zinc-500 tracking-widest uppercase mb-3">Llama Vision Logic</h2>
-          <div className="bg-[#1a1a1c] border border-zinc-800/80 rounded-xl p-4 min-h-[100px] shadow-sm">
+          <div className="bg-[#1a1a1c] border border-zinc-800/80 rounded-xl p-4 min-h-[100px] max-h-[180px] overflow-y-auto custom-scrollbar shadow-sm">
             <p className="text-sm text-zinc-400 leading-relaxed">
               {loading ? (
                 <span className="flex items-center gap-2">
