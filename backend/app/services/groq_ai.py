@@ -1,15 +1,29 @@
 import base64
+import re
 from groq import AsyncGroq
 from app.core.config import settings
 
 client = AsyncGroq(api_key=settings.GROQ_API_KEY)
+
+# Groq retired both original models (Llama 4 Scout on 2026-07-17, Llama 3.3 70B
+# for non-enterprise accounts on 2026-08-16), so every call fell back to the
+# "could not be loaded" text. Replacements from Groq's docs: Qwen 3.8 27B is
+# its image-capable model; gpt-oss-20b handles the text path.
+VISION_MODEL = "qwen/qwen3.8-27b"
+TEXT_MODEL = "openai/gpt-oss-20b"
+_THINK = re.compile(r"<think>.*?</think>", re.DOTALL)
+
+
+def _answer(text: str) -> str:
+    """Drop any <think>…</think> block a reasoning model leaves in the content."""
+    return _THINK.sub("", text or "").strip()
 
 async def generate_educational_context(prompt: str = None, file_bytes: bytes = None, mime_type: str = "image/jpeg") -> str:
     """Generates an educational summary using either text or vision models."""
     try:
         # PATH 1: The user uploaded an image (Use the Vision Model)
         if file_bytes:
-            print("[*] Groq Service: Analyzing uploaded image with Llama-3.2 Vision Model...")
+            print(f"[*] Groq Service: Analyzing uploaded image with {VISION_MODEL}...")
             base64_image = base64.b64encode(file_bytes).decode('utf-8')
             
             chat_completion = await client.chat.completions.create(
@@ -28,10 +42,10 @@ async def generate_educational_context(prompt: str = None, file_bytes: bytes = N
                         ]
                     }
                 ],
-                model="meta-llama/llama-4-scout-17b-16e-instruct", 
+                model=VISION_MODEL,
                 temperature=0.7,
             )
-            return chat_completion.choices[0].message.content
+            return _answer(chat_completion.choices[0].message.content)
             
         # PATH 2: The user typed a text prompt (Use the standard Text Model)
         else:
@@ -41,10 +55,11 @@ async def generate_educational_context(prompt: str = None, file_bytes: bytes = N
                     {"role": "system", "content": "You are a professional educational AI. Explain what the user's generated 3D object is in 2 short sentences, focusing entirely on its physical structure, anatomy, or scientific function."},
                     {"role": "user", "content": f"The user generated a 3D model of: {prompt}"}
                 ],
-                model="llama-3.3-70b-versatile",
+                model=TEXT_MODEL,
                 temperature=0.7,
+                extra_body={"reasoning_effort": "low"},
             )
-            return chat_completion.choices[0].message.content
+            return _answer(chat_completion.choices[0].message.content)
 
     except Exception as e:
         print(f"[!] Groq Error: {str(e)}")

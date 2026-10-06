@@ -16,7 +16,7 @@ This repository contains **Orbit-3D**, a high-performance interactive prototype 
 ### **What the system does:**
 
 1. **Concurrent AI Processing:** The backend routes the request simultaneously to Tripo3D (for mesh generation) and Groq (for contextualization) using asyncio.gather for maximum speed.  
-2. **Vision Analysis:** Groq's llama-4-scout-17b Vision model physically "looks" at the uploaded image to deduce what it is and generates a historical/scientific fact.  
+2. **Vision Analysis:** a vision model on Groq (`qwen/qwen3.8-27b`) physically "looks" at the uploaded image to deduce what it is and generates a historical/scientific fact. Text prompts use `openai/gpt-oss-20b`. (The prototype shipped on Llama 4 Scout and Llama 3.3 70B, both retired by Groq in 2026.)  
 3. **Headless Optimization:** A Dockerized Headless Blender script intercepts the raw AI mesh, centers its geometry at the origin (0, 0, 0) and scales its largest dimension to exactly 1 unit, so it fits the WebGL camera viewport, then exports it as a Draco-compressed .glb.  
 4. **Execution:** The React Three Fiber frontend dynamically imports the optimized .glb file using a highly performant Image-Based Lighting (IBL) and Contact Shadow setup.  
 5. **Contextualization:** The UI displays the AI-generated educational rationale alongside the 3D model.
@@ -34,7 +34,7 @@ This repository contains **Orbit-3D**, a high-performance interactive prototype 
 
 * **Framework:** FastAPI (Asynchronous Python), Pydantic v2, python-multipart  
 * **3D Processing:** Headless Blender 4.0.2 (via bpy and subprocess)  
-* **AI Engine:** Groq API (Llama-4 Scout / Llama-3.3) & Tripo3D API (v3.1)  
+* **AI Engine:** Groq API (Qwen 3.8 27B vision / gpt-oss-20b) & Tripo3D API (v3.1)  
 * **Containerization:** Docker (python:3.11-slim base with the Debian C++ GL libraries Blender needs)
 * **Hosting:** Hugging Face Spaces (backend, Docker SDK) and Vercel (frontend)
 

@@ -18,7 +18,7 @@ graph TD
     User((User))  
     UI["Orbit-UI<br/>(Next.js 16.2 / R3F)"]:::frontend  
     API["Orbit-Engine<br/>(FastAPI)"]:::backend  
-    Groq["Groq API<br/>(Llama-4-Scout / Llama-3.3)"]:::external  
+    Groq["Groq API<br/>(Qwen 3.8 vision / gpt-oss-20b)"]:::external  
     Tripo["Tripo3D API<br/>(v3.1)"]:::external  
     Blender["Headless Blender 4.0<br/>(Docker Subprocess)"]:::backend  
     TempStore[("Temp Volume<br/>(/temp)")]:::storage
@@ -46,7 +46,7 @@ graph TD
 
 1. **Learner Interaction:** User submits a text prompt or image via the Next.js **Orbit-UI**.  
 2. **FastAPI Orchestrator:** The backend initiates two concurrent asynchronous tasks:  
-   * **Task A (Groq):** Llama-4-Scout Vision processes the image/text to generate educational JSON context.  
+   * **Task A (Groq):** Qwen 3.8 (images) or gpt-oss-20b (text) generates the educational context.  
    * **Task B (Tripo3D):** Multimodal API generates the raw 3D mesh URL.  
 3. **Optimization Pipeline:** The backend downloads the raw mesh to a temporary volume mount.  
 4. **Headless Blender:** A Python bpy subprocess centers the geometry bounds and scales the model to exactly 1 unit.  
