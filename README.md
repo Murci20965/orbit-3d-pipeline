@@ -65,6 +65,18 @@ To maintain a strict Separation of Concerns, the API and the UI must be run conc
 
 4. **Application:** Visit http://localhost:3000
 
+## **🛡️ Limits**
+
+Each generation spends Tripo3D and Groq credits and runs Blender for minutes, so `/generate` is
+capped in-process (`backend/app/api/routes.py`, `backend/app/core/rate_limit.py`):
+**2 generations at a time**, **30 per hour in total**, and **5 per hour per client** (best effort,
+keyed on the proxy-appended address). Over a limit the API answers `429` and the UI says the
+engine is busy. CORS admits only the live UI and `http://localhost:3000`; CORS stops other
+websites' browsers, not scripts, which is why the caps exist.
+
+**Tests:** `cd backend && pip install -r requirements.txt pytest httpx && python -m pytest tests`
+(generation is stubbed, so no credits are used).
+
 ## **🚧 Limitations & Next Steps**
 
 * **Synchronous HTTP Timeouts:** High-fidelity 3D generation can take 2-3 minutes, which breaks standard Cloud Load Balancer limits (e.g., Render's 100s timeout).  

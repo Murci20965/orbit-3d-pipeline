@@ -5,11 +5,20 @@ import uuid
 import subprocess
 import asyncio
 
+from app.core.rate_limit import SlidingWindowLimiter, client_key
 from app.services.tripo import generate_raw_mesh, upload_image_to_tripo
 from app.services.utils import download_model
 from app.services.groq_ai import generate_educational_context
 
 router = APIRouter()
+
+# Each generation spends Tripo3D and Groq credits and runs Blender for minutes.
+# Global caps bound the spend whatever callers claim to be; the per-client cap
+# is a best-effort brake (see app/core/rate_limit.py).
+PER_CLIENT = SlidingWindowLimiter(limit=5, window_s=3_600)
+GLOBAL_HOURLY = SlidingWindowLimiter(limit=30, window_s=3_600)
+GENERATION_SLOTS = asyncio.Semaphore(2)
+BUSY = "The engine is busy right now. Try again in a few minutes."
 
 @router.post("/generate")
 async def generate_3d_asset(
@@ -18,6 +27,15 @@ async def generate_3d_asset(
     image_url: Optional[str] = Form(None),
     file: Optional[UploadFile] = File(None)
 ):
+    if GENERATION_SLOTS.locked():
+        raise HTTPException(status_code=429, detail=BUSY)
+    if not PER_CLIENT.allow(client_key(request)) or not GLOBAL_HOURLY.allow("all"):
+        raise HTTPException(status_code=429, detail=BUSY)
+    async with GENERATION_SLOTS:
+        return await _generate(request, prompt, image_url, file)
+
+
+async def _generate(request: Request, prompt: Optional[str], image_url: Optional[str], file: Optional[UploadFile]):
     try:
         print(f"[*] API: Received multimodal generation request.")
         

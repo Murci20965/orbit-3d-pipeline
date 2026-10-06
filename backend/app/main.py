@@ -7,9 +7,11 @@ from app.core.config import settings
 
 app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION)
 
+# Only the live UI (and local dev) may call the engine from a browser. CORS
+# does not stop scripts; the limits in app/api/routes.py protect the credits.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["https://orbit-3d-pipeline.vercel.app", "http://localhost:3000"],
     allow_credentials=False, 
     allow_methods=["*"],
     allow_headers=["*"],

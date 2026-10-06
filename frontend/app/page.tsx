@@ -65,7 +65,14 @@ export default function OrbitDashboard() {
         body: formData,
       });
       
-      if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+      if (!res.ok) {
+        // The engine answered, so this is not a network failure: show its reason.
+        const body = await res.json().catch(() => ({}));
+        alert(res.status === 429
+          ? body.detail || "The engine is busy right now. Try again in a few minutes."
+          : "Pipeline Error: " + (body.detail || `HTTP ${res.status}`));
+        return;
+      }
       const data = await res.json();
 
       if (data.status === "success") {
